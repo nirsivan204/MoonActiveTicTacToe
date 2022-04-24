@@ -36,6 +36,7 @@ public class gameMgr : MonoBehaviour
     Coroutine timerCoroutine;
     private bool isGameEnded = false;
     [SerializeField] private BoardMgr boardMgr;
+    public int COMDifficulty;
 
     public bool IsPVP { get => isPVP; set => isPVP = value; }
     public bool IsGameEnded { get => isGameEnded; set => isGameEnded = value; }
@@ -44,6 +45,8 @@ public class gameMgr : MonoBehaviour
     public int[] Turns { get => turns; set => turns = value; }
     public Sprite[] Imgs { get => imgs; set => imgs = value; }
 
+    /*This function is called every time the board gets an input from the player (clicking a place in the board).
+     */
     public void ChooseBoardPlace(int id)
     {
         if (id > N_PLACES || id < 0)
@@ -75,7 +78,9 @@ public class gameMgr : MonoBehaviour
             }
         }
     }
-
+/* This function is being called after each turn. It checks for winners or draw. If this is the case, finishes the game. 
+ * If not, changes the turn to the other player, raising the turn counts and restarts the timer.
+ */
     private void FinishTurn()
     {
         if (hintText)
@@ -83,10 +88,11 @@ public class gameMgr : MonoBehaviour
             hintText.enabled = false;
         }
         int winner = IsWin(gameBoard);
-        if (winner != 0)
+        if (winner != NO_WIN)
         {
             if (winText)
             {
+                winner = WinnerCodeToNum(winner);
                 winText.text = "Player " + winner + " Wins";
                 winText.enabled = true;
             }
@@ -124,6 +130,10 @@ public class gameMgr : MonoBehaviour
         }
     }
 
+    private int WinnerCodeToNum(int winner) //see analizeThreePlaces to understand the conversion
+    {
+        return winner-N_PLACES+1;
+    }
 
     IEnumerator Timer()
     {
@@ -181,7 +191,7 @@ public class gameMgr : MonoBehaviour
         timerCoroutine = StartCoroutine(Timer());
         int randImgId = Random.Range(0, 2);
         player1Img = imgs[randImgId];
-        player2Img = imgs[1- randImgId];
+        player2Img = imgs[1 - randImgId];
         if (randImgId == 0)//if player1 is X
         {
             P1CurrentTurn = true;
@@ -189,7 +199,7 @@ public class gameMgr : MonoBehaviour
         else
         {
             P1CurrentTurn = false;
-            if (!isPVP) 
+            if (!isPVP)
             {
                 isComTurn = true;
                 MakeComMove();
@@ -212,6 +222,9 @@ public class gameMgr : MonoBehaviour
             gameBoard[i] = EMPTY_SYMBOL;
         }
     }
+
+/* Undo the 2 last moves. delete 2 turns from the turn array, and updating the board to delete the imgs from this places
+ */
     public void Undo()
     {
         if (!isPVP && !isGameEnded)
@@ -235,7 +248,7 @@ public class gameMgr : MonoBehaviour
     {
         for (int i = 0; i < N_PLACES; i++)
         {
-            if(board[i] == EMPTY_SYMBOL)
+            if (board[i] == EMPTY_SYMBOL)
             {
                 if (boardMgr)
                 {
@@ -247,143 +260,123 @@ public class gameMgr : MonoBehaviour
 
     public static int IsWin(int[] board)
     {
+
+
         int winner = HorizontalWin(board);
-        if (winner != 0)
+        if (winner != NO_WIN)
         {
             return winner;
         }
         winner = VerticalWin(board);
-        if (winner != 0)
+        if (winner != NO_WIN)
         {
             return winner;
         }
-        return CrossWin(board);
+        return DiagonalWin(board);
 
     }
 
-/*    private void func()
+    public const int P1_WIN = 9;
+    public const int P2_WIN = 10;
+    public const int NO_WIN = -1;
+
+ /* This function gets a board, and 3 indexes. these indexes corresponds to a line in the board needed to be checked (row,col,or diagonal).
+  * It counts the number of O,X or empty spaces, and returns a resault:
+  * If it is almost a win (2 out of 3 are the same player's symbol), it returns the index of the empty place.
+  * If it is a win, returns the winner (because 0-8 are already taken, 9 means P1 is winning, 10 means P2 is winning
+  * else returns no win.
+  * 
+  */
+    private static int AnalizeThreePlaces(int[] board,int[] indexes)
     {
         int p1Counter = 0;
         int p2Counter = 0;
         int OCounter = 0;
         int OFirstLoc = -1;
-
-
-    }*/
-
-/*    private static int verticalWin(int[] board)
-    {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0;i < 3; i++)
         {
-            for (int j = 1; j < 3; j++)
-                if (board[i] == board[i + 3] && board[i + 3] == board[i + 6] && board[i + 6] == j)
-                {
-                    return j;
-                }
+            switch (board[indexes[i]])
+            {
+                case EMPTY_SYMBOL:
+                    OCounter++;
+                    if (OCounter == 1)
+                    {
+                        OFirstLoc = indexes[i];
+                    }
+                    break;
+                case PLAYER1_SYMBOL:
+                    p1Counter++;
+                    break;
+                case PLAYER2_SYMBOL:
+                    p2Counter++;
+                    break;
+            }
         }
-        return 0;
-    }*/
+        if(p1Counter == 3)
+        {
+            return P1_WIN;
+        }
+        if(p2Counter == 3)
+        {
+            return P2_WIN;
+        }
+        if(OCounter == 1 && p1Counter!= p2Counter)
+        {
+            return OFirstLoc;
+        }
+        return NO_WIN;
+
+    }
+
     private static int VerticalWin(int[] board)
     {
-        int sum;
-        int winner;
         for (int i = 0; i < 3; i++)
         {
-            sum = board[i] + board[i + 3] + board[i + 6];
-            winner = CheckSumWin(sum);
-            if (winner != 0)
+            int res = AnalizeThreePlaces(board, new int[] { i, 3 + i, 6 + i });
+            if (res == P1_WIN||res == P2_WIN)
             {
-                return winner;
+                return res;
             }
 
         }
-        return 0;
-    }
-    private static int CrossWin(int[] board)
-    {
-        int sum = board[0] + board[4] + board[8];
-        int winner = CheckSumWin(sum);
-        if (winner != 0)
-        {
-            return winner;
-        }
-        sum = board[2] + board[4] + board[6];
-        return CheckSumWin(sum);
+        return NO_WIN;
     }
 
     private static int HorizontalWin(int[] board)
     {
-        int sum;
-        int winner;
-        for (int i = 0; i< 3; i++)
+        for (int i = 0; i < 3; i++)
         {
-            sum = board[i*3] + board[i*3+1] + board[i*3 + 2];
-            winner = CheckSumWin(sum);
-            if (winner != 0)
+            int res = AnalizeThreePlaces(board, new int[] { i * 3, i * 3 + 1, i * 3 + 2 });
+            if (res == P1_WIN || res == P2_WIN)
             {
-                return winner;
+                return res;
             }
 
         }
-        return 0;
+        return NO_WIN;
     }
 
-    private static int CheckSumWin(int sum, bool checkAlmostWin = false)
+    private static int DiagonalWin(int[] board)
     {
-        int multiplier = 3;
-        if (checkAlmostWin)
+        int res = AnalizeThreePlaces(board, new int[] { 0, 4, 8 });
+        if (res == P1_WIN || res == P2_WIN)
         {
-            multiplier = 2;
+            return res;
         }
-        if(sum == multiplier * PLAYER1_SYMBOL)
+        res = AnalizeThreePlaces(board, new int[] { 2, 4, 6 });
+        if (res == P1_WIN || res == P2_WIN)
         {
-            return 1;
+            return res;
         }
-        if(sum == multiplier * PLAYER2_SYMBOL)
-        {
-            return 2;
-        }
-        return 0;
+        return NO_WIN;
     }
-
-/*    private static int crossWin(int[] board)
-    {
-        for (int j = 1; j < 3; j++)
-        {
-            if (board[0] == board[4] && board[4] == board[8] && board[8] == j)
-            {
-                return j;
-            }
-            if (board[2] == board[4] && board[4] == board[6] && board[6] == j)
-            {
-                return j;
-            }
-        }
-        return 0;
-    }*/
-
-    /*    private static int horizontalWin(int[] board)
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 1; j < 3; j++)
-                {
-                    if (board[i * 3] == board[1 + i * 3] && board[1 + i * 3] == board[2 + i * 3] && board[2 + i * 3] == j)
-                    {
-                        return j;
-                    }
-                }
-
-            }
-            return 0;
-        }*/
 
     public void OnGetHintButtonPress()
     {
         GetHint();
     }
 
-
+    //search for an empty random place and tell the player
     public int GetHint()
     {
         if (!isPVP && !isGameEnded)
@@ -415,6 +408,7 @@ public class gameMgr : MonoBehaviour
         return -1;
     }
 
+    //The easy computer startegy, is just random behavior.
     private int EasyCom()
     {
         int move;
@@ -432,91 +426,55 @@ public class gameMgr : MonoBehaviour
         return move;
     }
 
-    private static int FindEmptyPlaceInRow(int[] board ,int row)
+    private static int FindIndex(bool isRow, int i, int j)
     {
-        for (int i = 0; i < 3; i++)
-        {
-            if (board[3 * row + i] == 0)
-            {
-                return 3 * row + i;
-            }
-        }
-        return -1; // error
+        if (isRow)
+            return 3 * j + i;
+        else
+            return 3 * i + j;
     }
-
-    private static int FindEmptyPlaceInCol(int[] board, int col)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            if (board[3*i + col] == 0)
-            {
-                return 3 * i + col;
-            }
-        }
-        return -1; // error
-    }
-
-    /*    private int tryWin()
-        {
-            int counter = 0;
-            for(int i = 0; i < 3; i++)
-            {
-
-            }
-        }*/
-
+/*  The medium computer startegy, is checking if there is almost a win, and if so,  choosing the last place in the line (block the opponent, or win)
+ *  If no line of almost win, do a random choise
+*/
     private int MediumCom()
     {
-        int sum;
-        for(int i=0; i<3; i++)
+        int res;
+        bool[] isRowOrCol = { true, false };
+        foreach (bool b in isRowOrCol)
         {
-            sum = gameBoard[i * 3] + gameBoard[i * 3 + 1] + gameBoard[i * 3 + 2]; // check row i
-            if (CheckSumWin(sum, true) != 0)
+            for (int j = 0; j < 3; j++)
             {
-                return FindEmptyPlaceInRow(GameBoard,i);
+                res = AnalizeThreePlaces(gameBoard, new int[] { FindIndex(b, 0, j), FindIndex(b, 1, j), FindIndex(b, 2, j) });
+                if (0 <= res && res < 9)
+                {
+                    return res;
+                }
             }
-
-
-            sum = gameBoard[i] + gameBoard[i + 3] + gameBoard[i + 6]; //check col i
-            if (CheckSumWin(sum, true) != 0)
-            {
-                return FindEmptyPlaceInCol(GameBoard,i);
-            }
-
         }
-
-        sum = gameBoard[0] + gameBoard[4] + gameBoard[8]; // check \ diagonal
-        if (CheckSumWin(sum, true) != 0)
+        res = AnalizeThreePlaces(gameBoard, new int[] { 0, 4, 8 });
+        if (0 <= res && res < 9)
         {
-            if(gameBoard[0] == 0)
-            {
-                return 0;
-            }
-            if(gameBoard[4] == 0)
-            {
-                return 4;
-            }
-            return 8;
+            return res;
         }
-        sum = gameBoard[2] + gameBoard[4] + gameBoard[6];
-        if(CheckSumWin(sum, true) != 0)
+        res = AnalizeThreePlaces(gameBoard, new int[] { 2, 4, 6 });
+        if (0 <= res && res < 9)
         {
-            if (gameBoard[2] == 0)
-            {
-                return 2;
-            }
-            if (gameBoard[4] == 0)
-            {
-                return 4;
-            }
-            return 6;
+            return res;
         }
         return EasyCom();
     }
 
     private void MakeComMove()
     {
-        int move = MediumCom();
+        int move;
+        if (COMDifficulty == 0)
+        {
+            move = EasyCom();
+        }
+        else
+        {
+            move = MediumCom();
+        }
         boardMgr.drawSpriteInPlace(move,player2Img);
         gameBoard[move] = PLAYER2_SYMBOL;
         turns[n_turn] = move;
