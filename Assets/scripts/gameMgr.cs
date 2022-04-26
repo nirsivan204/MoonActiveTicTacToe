@@ -8,12 +8,11 @@ using Random = UnityEngine.Random;
 
 public class gameMgr : MonoBehaviour
 {
-    //    [SerializeField] SpriteRenderer[] boardPlacesSprites;
     public const int N_PLACES = 9;
     private const int MAX_SECONDS = 5;
     public const int EMPTY_SYMBOL = 0;
     public const int PLAYER1_SYMBOL = 1;
-    public const int PLAYER2_SYMBOL = 4;
+    public const int PLAYER2_SYMBOL = 2;
     [SerializeField] Sprite[] imgs; //[XImg, OImg, BGImg]
     [SerializeField] GameObject hintButton;
     [SerializeField] GameObject undoButton;
@@ -61,7 +60,7 @@ public class gameMgr : MonoBehaviour
                 {
                     if (boardMgr)
                     {
-                        boardMgr.drawSpriteInPlace(id, player1Img);
+                        boardMgr.DrawSpriteInPlace(id, player1Img);
                     }
                     gameBoard[id] = PLAYER1_SYMBOL;
                 }
@@ -69,7 +68,7 @@ public class gameMgr : MonoBehaviour
                 {
                     if (boardMgr)
                     {
-                        boardMgr.drawSpriteInPlace(id, player2Img);
+                        boardMgr.DrawSpriteInPlace(id, player2Img);
                     }
                     gameBoard[id] = PLAYER2_SYMBOL;
                 }
@@ -130,7 +129,7 @@ public class gameMgr : MonoBehaviour
         }
     }
 
-    private int WinnerCodeToNum(int winner) //see analizeThreePlaces to understand the conversion
+    private int WinnerCodeToNum(int winner) //see AnalizeThreePlaces to understand the conversion
     {
         return winner-N_PLACES+1;
     }
@@ -158,6 +157,7 @@ public class gameMgr : MonoBehaviour
                 }
                 winText.text = "Player " + winner + " Wins";
                 winText.enabled = true;
+                EndGame();
                 break;
             }
         }
@@ -169,7 +169,7 @@ public class gameMgr : MonoBehaviour
         undoButton.SetActive(!isPVP);
         BGSprite.sprite = imgs[2];
         board.SetActive(true);
-        boardMgr.init();
+        boardMgr.Init();
         Restart();
     }
 
@@ -252,7 +252,7 @@ public class gameMgr : MonoBehaviour
             {
                 if (boardMgr)
                 {
-                    boardMgr.drawSpriteInPlace(i, null);
+                    boardMgr.DrawSpriteInPlace(i, null);
                 }
             }
         }
@@ -287,7 +287,7 @@ public class gameMgr : MonoBehaviour
   * else returns no win.
   * 
   */
-    private static int AnalizeThreePlaces(int[] board,int[] indexes)
+    public static int AnalizeThreePlaces(int[] board,int[] indexes)
     {
         int p1Counter = 0;
         int p2Counter = 0;
@@ -408,74 +408,11 @@ public class gameMgr : MonoBehaviour
         return -1;
     }
 
-    //The easy computer startegy, is just random behavior.
-    private int EasyCom()
-    {
-        int move;
-        int tries = 0;
-        do
-        {
-            move = Random.Range(0, N_PLACES);
-            tries++;
-            if (tries > 100)
-            {
-                Debug.Log("error in com move");
-                break;
-            }
-        } while (gameBoard[move] != EMPTY_SYMBOL);
-        return move;
-    }
-
-    private static int FindIndex(bool isRow, int i, int j)
-    {
-        if (isRow)
-            return 3 * j + i;
-        else
-            return 3 * i + j;
-    }
-/*  The medium computer startegy, is checking if there is almost a win, and if so,  choosing the last place in the line (block the opponent, or win)
- *  If no line of almost win, do a random choise
-*/
-    private int MediumCom()
-    {
-        int res;
-        bool[] isRowOrCol = { true, false };
-        foreach (bool b in isRowOrCol)
-        {
-            for (int j = 0; j < 3; j++)
-            {
-                res = AnalizeThreePlaces(gameBoard, new int[] { FindIndex(b, 0, j), FindIndex(b, 1, j), FindIndex(b, 2, j) });
-                if (0 <= res && res < 9)
-                {
-                    return res;
-                }
-            }
-        }
-        res = AnalizeThreePlaces(gameBoard, new int[] { 0, 4, 8 });
-        if (0 <= res && res < 9)
-        {
-            return res;
-        }
-        res = AnalizeThreePlaces(gameBoard, new int[] { 2, 4, 6 });
-        if (0 <= res && res < 9)
-        {
-            return res;
-        }
-        return EasyCom();
-    }
 
     private void MakeComMove()
     {
-        int move;
-        if (COMDifficulty == 0)
-        {
-            move = EasyCom();
-        }
-        else
-        {
-            move = MediumCom();
-        }
-        boardMgr.drawSpriteInPlace(move,player2Img);
+        int move = AIMgr.GetNextComMove(COMDifficulty, gameBoard);
+        boardMgr.DrawSpriteInPlace(move,player2Img);
         gameBoard[move] = PLAYER2_SYMBOL;
         turns[n_turn] = move;
         FinishTurn();
@@ -489,4 +426,5 @@ public class gameMgr : MonoBehaviour
         }
         isGameEnded = true;
     }
+
 }

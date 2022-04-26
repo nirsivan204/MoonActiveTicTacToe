@@ -25,7 +25,7 @@ public class CustomEditorWindow : EditorWindow
 
         if (GUILayout.Button("Create Asset Bundle"))
         {
-            AssetBundleUtility.saveAssetBundle(assetBundleName, XImage,OImage,backgroundImage);
+            AssetBundleSaver.SaveAssetBundle(assetBundleName, XImage,OImage,backgroundImage);
         }
     }
 }

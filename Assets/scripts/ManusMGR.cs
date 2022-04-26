@@ -3,7 +3,6 @@ using UnityEngine.UI;
 
 public class ManusMGR : MonoBehaviour
 {
-    // Start is called before the first frame update
     private bool isPVP = false;
     private string bundleName;
     private int COMDifficulty = 0;
@@ -16,7 +15,7 @@ public class ManusMGR : MonoBehaviour
     {
         difficultyDropdown.onValueChanged.AddListener(delegate { ChooseDifficulty(difficultyDropdown); });
     }
-    public void startGame()
+    public void StartGame()
     {
         manuGUI.SetActive(false);
         gameGUI.SetActive(true);
@@ -28,6 +27,7 @@ public class ManusMGR : MonoBehaviour
     public void OnPVPToggle()
     {
         isPVP = !isPVP;
+        difficultyDropdown.gameObject.SetActive(!isPVP);
     }
 
     public void GetAssetBundleName(string input)
@@ -35,12 +35,15 @@ public class ManusMGR : MonoBehaviour
         bundleName = input;
     }
 
-    public void reskin()
+    public void Reskin()
     {
-        Texture2D[] loadedTextures = AssetBundleUtility.loadAssetBundle(bundleName);
-        for (int i = 0; i<3; i++)
+        Texture2D[] loadedTextures = AssetBundleLoader.LoadAssetBundle(bundleName);
+        if (loadedTextures != null)
         {
-            GM.Imgs[i] = Sprite.Create(loadedTextures[i], new Rect(0.0f, 0.0f, loadedTextures[i].width, loadedTextures[i].height), new Vector2(0.5f, 0.5f));
+            for (int i = 0; i < 3; i++)
+            {
+                GM.Imgs[i] = Sprite.Create(loadedTextures[i], new Rect(0.0f, 0.0f, loadedTextures[i].width, loadedTextures[i].height), new Vector2(0.5f, 0.5f));
+            }
         }
     }
 

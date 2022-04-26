@@ -15,7 +15,7 @@ public class BoardMgr : MonoBehaviour
         gm.ChooseBoardPlace(id);
     }
 
-    public void drawSpriteInPlace(int id, Sprite img)
+    public void DrawSpriteInPlace(int id, Sprite img)
     {
         if (sprites!=null)
         {
@@ -23,12 +23,12 @@ public class BoardMgr : MonoBehaviour
         }
     }
 
-    public void init()
+    public void Init()
     {
         int i = 0;
         foreach (boardSprite BS in sprites)
         {
-            BS.init(i++);
+            BS.Init(i++);
         }
         boardGraphics.SetActive(true);
         boardClickables.SetActive(true);

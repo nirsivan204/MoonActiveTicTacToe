@@ -17,7 +17,7 @@ public class boardSprite : MonoBehaviour
         boardMgr.OnSpriteClicked(id);
     }
 
-    public void init(int id)
+    public void Init(int id)
     {
         this.id = id;
         spriteRenderer = GetComponent<SpriteRenderer>();

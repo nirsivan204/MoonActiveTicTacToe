@@ -10,7 +10,7 @@ namespace Tests
     {
 
         [Test]
-        public void testHintButtonFullBoard()
+        public void TestHintButtonFullBoard()
         {
             gameMgr gm = new gameMgr();
             gm.IsPVP = false;
@@ -21,7 +21,7 @@ namespace Tests
         }
 
         [Test]
-        public void testHintButtonAlmostFullBoard()
+        public void TestHintButtonAlmostFullBoard()
         {
             gameMgr gm = new gameMgr();
             gm.IsPVP = false;
@@ -40,7 +40,7 @@ namespace Tests
         }
 
         [Test]
-        public void testHintButtonAlmostEemptyBoard()
+        public void TestHintButtonAlmostEemptyBoard()
         {
             gameMgr gm = new gameMgr();
             gm.IsPVP = false;
@@ -76,7 +76,7 @@ namespace Tests
         }
 
         [Test]
-        public void testHintButtonOnlyInPVE()
+        public void TestHintButtonOnlyInPVE()
         {
             gameMgr gm = new gameMgr();
             gm.IsPVP = true;
@@ -86,7 +86,7 @@ namespace Tests
         }
 
         [Test]
-        public void testUndoButtonOnlyInPVE()
+        public void TestUndoButtonOnlyInPVE()
         {
             gameMgr gm = new gameMgr();
             gm.IsPVP = true;
@@ -104,7 +104,7 @@ namespace Tests
         }
 
         [Test]
-        public void testUndoButton()
+        public void TestUndoButton()
         {
             gameMgr gm = new gameMgr();
             gm.IsPVP = false;
